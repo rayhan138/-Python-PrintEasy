@@ -1,0 +1,69 @@
+/* ═══════════════════════════════════════════════════════════
+   PrintEasy — Print-Specific Styles
+   Applied only when printing via @media print
+   ═══════════════════════════════════════════════════════════ */
+
+@media print {
+    /* Hide everything except the page canvas */
+    .app-header,
+    .panel,
+    .preview-toolbar,
+    .toast-container,
+    .loading-overlay,
+    .page-overlay,
+    .page-empty,
+    .template-zone {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        margin: 0;
+        padding: 0;
+    }
+
+    .app-main {
+        display: block;
+        height: auto;
+        overflow: visible;
+    }
+
+    .preview-container {
+        display: block;
+        overflow: visible;
+        background: white;
+    }
+
+    .preview-area {
+        display: block;
+        padding: 0;
+        background: white;
+    }
+
+    .page-container {
+        width: 100% !important;
+        height: auto !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin: 0;
+        page-break-inside: avoid;
+    }
+
+    .page-container canvas {
+        position: static;
+        width: 100%;
+        height: auto;
+    }
+
+    /* Force grayscale for all content */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Page setup */
+    @page {
+        size: A5 portrait;
+        margin: 5mm;
+    }
+}

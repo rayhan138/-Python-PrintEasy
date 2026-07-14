@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrintEasy — Scan & Print</title>
+    <meta name="description" content="Scan ID cards, arrange on page, and print in B&W — all in one app.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/print.css" media="print">
+</head>
+<body>
+    <!-- ─── Header ──────────────────────────────────── -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9V2h12v7"/>
+                    <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
+                </svg>
+                <h1>PrintEasy</h1>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="scanner-status" id="scannerStatus">
+                <span class="status-dot disconnected"></span>
+                <span class="status-text">Checking scanner...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ─── Main Content ────────────────────────────── -->
+    <main class="app-main">
+        <!-- ─── Left Panel: Controls ──────────────── -->
+        <aside class="panel panel-left">
+            <!-- Scan Section -->
+            <section class="panel-section">
+                <h2 class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 7V5a2 2 0 012-2h2"/>
+                        <path d="M17 3h2a2 2 0 012 2v2"/>
+                        <path d="M21 17v2a2 2 0 01-2 2h-2"/>
+                        <path d="M7 21H5a2 2 0 01-2-2v-2"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                    </svg>
+                    Scan
+                </h2>
+
+                <div class="scanner-select-group">
+                    <label for="scannerSelect">Scanner</label>
+                    <select id="scannerSelect" class="select-input">
+                        <option value="">Detecting...</option>
+                    </select>
+                </div>
+
+                <div class="scan-settings">
+                    <div class="setting-row">
+                        <label for="colorModeSelect">Color Mode</label>
+                        <select id="colorModeSelect" class="select-input">
+                            <option value="bw" selected>Monochrome (Black & White)</option>
+                            <option value="grayscale">Grayscale</option>
+                            <option value="color">Color</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label for="dpiSelect">Quality</label>
+                        <select id="dpiSelect" class="select-input">
+                            <option value="150">Fast (150 DPI)</option>
+                            <option value="200" selected>Medium (200 DPI)</option>
+                            <option value="300">Standard (300 DPI)</option>
+                            <option value="600">High (600 DPI)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-scan" id="btnScan" onclick="handleScan()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 7V5a2 2 0 012-2h2"/>
+                        <path d="M17 3h2a2 2 0 012 2v2"/>
+                        <path d="M21 17v2a2 2 0 01-2 2h-2"/>
+                        <path d="M7 21H5a2 2 0 01-2-2v-2"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                    </svg>
+                    SCAN
+                </button>
+
+                <div class="divider-text">or</div>
+
+                <label class="btn btn-upload" for="fileUpload">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    Upload Image
+                </label>
+                <input type="file" id="fileUpload" accept="image/*" hidden onchange="handleUpload(event)">
+            </section>
+
+            <!-- Scanned Images -->
+            <section class="panel-section">
+                <h2 class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                    Scanned Images
+                </h2>
+                <div class="scanned-images" id="scannedImages">
+                    <div class="empty-state" id="emptyState">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+                        <p>Scan or upload ID card images</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Image Controls -->
+            <section class="panel-section" id="imageControlsSection" style="display:none;">
+                <h2 class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                    </svg>
+                    Adjustments
+                </h2>
+
+                <div class="control-group">
+                    <div class="control-row">
+                        <label>Brightness</label>
+                        <input type="range" id="brightnessSlider" min="-100" max="100" value="0" oninput="updateImageProcessing()">
+                        <span class="slider-value" id="brightnessValue">0</span>
+                    </div>
+                    <div class="control-row">
+                        <label>Contrast</label>
+                        <input type="range" id="contrastSlider" min="-100" max="100" value="0" oninput="updateImageProcessing()">
+                        <span class="slider-value" id="contrastValue">0</span>
+                    </div>
+                    <div class="control-row">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2px;">
+                            <label style="margin: 0;">B&W Threshold</label>
+                            <label class="switch-container" style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: var(--text-muted);">
+                                <input type="checkbox" id="thresholdToggle" onchange="handleThresholdToggle(this.checked)" style="cursor: pointer; accent-color: var(--primary);">
+                                <span>Enable</span>
+                            </label>
+                        </div>
+                        <input type="range" id="thresholdSlider" min="1" max="255" value="128" disabled oninput="updateImageProcessing()">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                            <span class="slider-value" id="thresholdValue" style="margin: 0;">Off</span>
+                            <div style="display: flex; gap: 4px;" id="thresholdPresets">
+                                <button class="btn btn-ghost" onclick="setThresholdPreset(100)" disabled style="font-size: 10px; padding: 1px 5px; height: auto; min-height: unset; border-color: var(--border-subtle);">100</button>
+                                <button class="btn btn-ghost" onclick="setThresholdPreset(128)" disabled style="font-size: 10px; padding: 1px 5px; height: auto; min-height: unset; border-color: var(--border-subtle);">128</button>
+                                <button class="btn btn-ghost" onclick="setThresholdPreset(160)" disabled style="font-size: 10px; padding: 1px 5px; height: auto; min-height: unset; border-color: var(--border-subtle);">160</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons" style="margin-bottom: var(--space-xs);">
+                    <button class="btn btn-small" onclick="rotateSelected(-90)" title="Rotate Left">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-small" onclick="rotateSelected(90)" title="Rotate Right">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-small" onclick="openCropModal()" title="Crop Image">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"></path>
+                            <path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"></path>
+                        </svg>
+                        Crop
+                    </button>
+                    <button class="btn btn-small btn-danger" onclick="deleteSelected()" title="Delete">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-small" onclick="zoomSelected(0.1)" title="Zoom In (Enlarge)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                        </svg>
+                        Zoom +
+                    </button>
+                    <button class="btn btn-small" onclick="zoomSelected(-0.1)" title="Zoom Out (Reduce)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>
+                        </svg>
+                        Zoom -
+                    </button>
+                    <button class="btn btn-small" onclick="resetSelectedPlacement()" title="Reset Position & Size">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+        </aside>
+
+        <!-- ─── Center: Page Preview ──────────────── -->
+        <div class="preview-container">
+            <div class="preview-toolbar">
+                <div class="toolbar-left">
+                    <h2 class="preview-title">Page Preview</h2>
+                </div>
+                <div class="toolbar-center">
+                    <div style="display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.03); padding: 4px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                        <span style="font-size: 13px; font-weight: 500; color: var(--text-color);">ID Copies:</span>
+                        <label class="switch-container" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 500;">
+                            <span style="color: var(--text-muted);">2 (One ID)</span>
+                            <input type="checkbox" id="copiesToggle" onchange="handleCopiesToggle(this.checked)" checked style="cursor: pointer; accent-color: var(--primary); width: 16px; height: 16px;">
+                            <span>4 (Two IDs)</span>
+                        </label>
+                        
+                        <!-- Keep original selector hidden so internal state logic still works -->
+                        <select id="templateSelect" style="display: none;">
+                            <option value="2x-front-back" selected>2× ID Card — Front & Back</option>
+                            <option value="front-back">ID Card — Front & Back</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="paper-selector">
+                        <label for="paperSelect">Paper:</label>
+                        <select id="paperSelect" class="select-input" onchange="changePaperSize()">
+                            <option value="A5">A5 (148 × 210 mm)</option>
+                            <option value="A4" selected>A4 (210 × 297 mm)</option>
+                            <option value="A6">A6 (105 × 148 mm)</option>
+                            <option value="Letter">Letter (8.5 × 11 in)</option>
+                            <option value="Legal">Legal (8.5 × 14 in)</option>
+                        </select>
+                    </div>
+                    <div class="orientation-toggle">
+                        <button class="btn btn-icon" id="btnPortrait" onclick="setOrientation('portrait')" title="Portrait" data-active="false">
+                            <svg width="16" height="20" viewBox="0 0 16 20"><rect x="1" y="1" width="14" height="18" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                        </button>
+                        <button class="btn btn-icon" id="btnLandscape" onclick="setOrientation('landscape')" title="Landscape" data-active="true">
+                            <svg width="20" height="16" viewBox="0 0 20 16"><rect x="1" y="1" width="18" height="14" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-area" id="previewArea">
+                <div class="page-container" id="pageContainer">
+                    <canvas id="pageCanvas"></canvas>
+                    <div class="page-overlay" id="pageOverlay">
+                        <!-- Template placeholder zones render here -->
+                    </div>
+                    <div class="page-empty" id="pageEmpty">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M12 8v8M8 12h8"/>
+                        </svg>
+                        <p>Scan an ID card and it will appear here</p>
+                        <p class="sub">Select a template above to set the layout</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Right Panel: Print Settings ────────── -->
+        <aside class="panel panel-right">
+            <section class="panel-section">
+                <h2 class="section-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9V2h12v7"/>
+                        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                        <rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    Print Settings
+                </h2>
+
+                <div class="print-settings">
+                    <div class="setting-row">
+                        <label for="printerSelect">Printer</label>
+                        <select id="printerSelect" class="select-input">
+                            <option value="">Detecting...</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label for="copiesInput">Copies</label>
+                        <div class="number-input">
+                            <button class="btn btn-icon" onclick="adjustCopies(-1)">−</button>
+                            <input type="number" id="copiesInput" value="1" min="1" max="99">
+                            <button class="btn btn-icon" onclick="adjustCopies(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <label for="printModeSelect">Print Mode</label>
+                        <select id="printModeSelect" class="select-input">
+                            <option value="mono" selected>Monochrome (B&W)</option>
+                            <option value="color">Color</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel-section panel-section-actions">
+                <button class="btn btn-print" id="btnPrint" onclick="handlePrint()" disabled>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9V2h12v7"/>
+                        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                        <rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    PRINT B&W
+                </button>
+
+                <button class="btn btn-secondary" onclick="handleSavePDF()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Save as Image
+                </button>
+
+                <button class="btn btn-ghost" onclick="resetAll()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+                    </svg>
+                    Reset All
+                </button>
+            </section>
+        </aside>
+    </main>
+
+    <!-- ─── Toast Notification ──────────────────────── -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ─── Loading Overlay ─────────────────────────── -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="scanner-animation">
+                <div class="scan-line"></div>
+            </div>
+            <p id="loadingText">Scanning...</p>
+        </div>
+    </div>
+    <!-- ─── Crop Modal ─────────────────────────────── -->
+    <div class="modal-overlay" id="cropModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-md); flex-wrap: wrap;">
+                <h3 class="modal-title">Crop Image</h3>
+                <div style="display: flex; gap: var(--space-md); align-items: center;">
+                    <!-- Zoom Controls -->
+                    <div class="orientation-toggle" style="border: 1px solid var(--border-default);">
+                        <button class="btn btn-icon" onclick="adjustCropZoom(-0.25)" title="Zoom Out" style="font-size: 12px; padding: 4px 8px; font-weight: bold;">-</button>
+                        <span id="cropZoomLabel" style="font-size: 11px; min-width: 42px; text-align: center; color: var(--text-secondary); display: inline-block;">100%</span>
+                        <button class="btn btn-icon" onclick="adjustCropZoom(0.25)" title="Zoom In" style="font-size: 12px; padding: 4px 8px; font-weight: bold;">+</button>
+                    </div>
+                    
+                    <!-- Crop Type Mode -->
+                    <div class="orientation-toggle" style="border: 1px solid var(--border-default);">
+                        <button class="btn btn-icon" id="btnStandardCrop" onclick="setCropMode('standard')" title="Standard Rectangular Crop" data-active="true" style="font-size: 11px; padding: 4px 10px;">
+                            Rectangular
+                        </button>
+                        <button class="btn btn-icon" id="btnPerspectiveCrop" onclick="setCropMode('perspective')" title="Photoshop Perspective Warp" style="font-size: 11px; padding: 4px 10px;">
+                            Perspective
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p class="modal-subtitle" id="cropModalSubtitle">Drag handles to select the area you want to keep</p>
+            <div class="cropper-container">
+                <canvas id="cropCanvas"></canvas>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeCropModal()">Cancel</button>
+                <button class="btn btn-print" onclick="applyCrop()">Apply Crop</button>
+            </div>
+        </div>
+    </div>
+    <!-- ─── Scripts ─────────────────────────────────── -->
+    <script src="/static/js/imageProcessor.js"></script>
+    <script src="/static/js/templates.js"></script>
+    <script src="/static/js/printManager.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
